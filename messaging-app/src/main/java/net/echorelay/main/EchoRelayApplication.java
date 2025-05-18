@@ -1,28 +1,30 @@
 package net.echorelay.main;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ConfigurableApplicationContext;
 
-@SpringBootApplication(
-	    scanBasePackages = "net.echorelay",
-	    exclude = {org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class}
-	)
+import net.echorelay.kafkaConsumer.ConsumerService;
+import net.echorelay.kafkaProducer.ProducerService;
 
-public class EchoRelayApplication implements CommandLineRunner {
-
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+@SpringBootApplication(scanBasePackages = "net.echorelay")
+public class EchoRelayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EchoRelayApplication.class, args);
-    }
+        // Start Spring context and get the beans manually
+        ConfigurableApplicationContext context = SpringApplication.run(EchoRelayApplication.class, args);
 
-    @Override
-    public void run(String... args) {
-        kafkaTemplate.send("message-topic", "user123", "Hello, Kafka!");
-        System.out.println("Message Sent via CommandLineRunner!");
+        // Retrieve Spring-managed beans
+        ProducerService producer = context.getBean(ProducerService.class);
+        ConsumerService consumerService = context.getBean(ConsumerService.class);
+
+        System.out.println("Hello World");
+
+        try {
+            producer.sendToUser(0, "Hiiii !");
+            System.out.println(consumerService.recieveMsg(0));	
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
